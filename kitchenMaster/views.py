@@ -59,3 +59,10 @@ def recipeApi(request, id=0):
         recipe = Recipe.objects.get(id=id)
         recipe.delete()
         return JsonResponse("Recipe is deleted successfully", safe=False)
+    elif request.method == 'PUT':
+        recipe_data = JSONParser().parse(request)
+        recipe_serializer = RecipeSerializer(Recipe, data=recipe_data)
+        if recipe_serializer.is_valid():
+            recipe_serializer.save()
+            return JsonResponse("Recipe updated successfully")
+        return JsonResponse("Fail to update recipe", safe=False)
