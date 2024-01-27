@@ -9,6 +9,11 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = '__all__'
 
+        extra_kwargs = {'password': {
+            'write_only': True,
+            'required': True
+        }}
+
     def create(self, validated_data):
         # token for user account and hashing password
         user = User.objects.create_user(**validated_data)
@@ -17,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    fk = UserSerializer()
     class Meta:
         model = Recipe
         fields = '__all__'
