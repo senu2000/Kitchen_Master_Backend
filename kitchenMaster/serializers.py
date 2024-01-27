@@ -6,8 +6,12 @@ from .models import Recipe
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
-
+        fields = ['username', 'password', 'is_superuser', 'email']
+        extra_kwargs = {
+            'password': {
+                'write_only': True,
+            },
+        }
 
 class RecipeSerializer(serializers.ModelSerializer):
     class Meta:
