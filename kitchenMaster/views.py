@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import UserSerializer
@@ -37,6 +38,11 @@ class UserAddView(APIView):
             return JsonResponse("User added successfully")
         return JsonResponse("Fail to add user", safe=False)
 
+class FindUser(APIView):
+    def get(self , request):
+        return(Response({
+            "details":request.user.is_superuser
+        }))
 
 class RecipeUpdate(APIView):
     def put(self, request):
@@ -60,16 +66,18 @@ class RecipeView(APIView):
         recipe_serializer = RecipeSerializer(recipe, many=True)
         return JsonResponse(recipe_serializer.data, safe=False)
 
+
 class RecipeDeleteView(APIView):
     def delete(self, request, id):
         recipe = Recipe.objects.get(id=id)
         recipe.delete()
         return JsonResponse("details : success", safe=False)
 
+
 class RecipeAddView(APIView):
     def post(self, request):
-        recipe = Recipe.objects.all()
-        recipe_serializer = RecipeSerializer(recipe, many=True)
+        # recipe = Recipe.objects.all()
+        recipe_serializer = RecipeSerializer(data=request.data)
         if recipe_serializer.is_valid():
             recipe_serializer.save()
             return JsonResponse("Recipe added successfully")
