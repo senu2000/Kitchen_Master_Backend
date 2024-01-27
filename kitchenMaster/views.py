@@ -40,6 +40,17 @@ def userApi(request, id=0):
 class RecipeView(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     queryset = Recipe.objects.all()
+    def put(self, request, id):
+        try:
+            recipe_data = Recipe.objects.get(id=id)
+            recipe_serializer = RecipeSerializer(data=recipe_data)
+            if recipe_serializer.is_valid():
+                recipe_serializer.save()
+                return JsonResponse("Recipe updated successfully")
+            return JsonResponse("Fail to update recipe", safe=False)
+        except:
+            return JsonResponse("Fail to update1 recipe", safe=False)
+
 
 
 @csrf_exempt
@@ -59,3 +70,11 @@ def recipeApi(request, id=0):
         recipe = Recipe.objects.get(id=id)
         recipe.delete()
         return JsonResponse("Recipe is deleted successfully", safe=False)
+    elif request.method == 'PUT':
+        recipe_data = JSONParser().parse(request)
+        recipe_data = Recipe.objects.get(id=id)
+        recipe_serializer = RecipeSerializer(data=recipe_data)
+        if recipe_serializer.is_valid():
+            recipe_serializer.save()
+            return JsonResponse("Recipe updated successfully")
+        return JsonResponse("Fail to update recipe", safe=False)
