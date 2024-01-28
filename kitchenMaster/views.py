@@ -3,9 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from .serializers import UserSerializer
-from .serializers import RecipeSerializer
+from .serializers import RecipeSerializer , RecipeAddSerializer , UserSerializer
 
 from .models import User
 from .models import Recipe
@@ -103,7 +101,7 @@ class RecipeDeleteView(APIView):
 
 class RecipeAddView(APIView):
     def post(self, request):
-        recipe_serializer = RecipeSerializer(data=request.data)
+        recipe_serializer = RecipeAddSerializer(data=request.data)
 
         if recipe_serializer.is_valid():
             recipe_serializer.save()

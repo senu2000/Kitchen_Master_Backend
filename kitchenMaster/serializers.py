@@ -23,6 +23,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RecipeSerializer(serializers.ModelSerializer):
     fk = UserSerializer()
+
+    class Meta:
+        model = Recipe
+        fields = '__all__'
+
+
+class RecipeAddSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = '__all__'

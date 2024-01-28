@@ -6,7 +6,7 @@ urlpatterns = [
     path('kitchenMaster/recipeform/one/<str:id>/', OneRecipeView.as_view()),
     path('kitchenMaster/recipeform/fk/<str:fk_id>/', RecipeViewUsingFk.as_view()),
     path('kitchenMaster/recipeform/update/', RecipeUpdate.as_view()),
-    path('kitchenMaster/recipeform/add/', RecipeAddView.as_view(), name='add_recipe'),
+    path('kitchenMaster/recipeform/add/', RecipeAddView.as_view()),
     path('kitchenMaster/recipeform/<str:id>/', RecipeDeleteView.as_view()),
     path('kitchenMaster/userform/', UserView.as_view()),
     path('kitchenMaster/userform/add/', UserAddView.as_view()),
