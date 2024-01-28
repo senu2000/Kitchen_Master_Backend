@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,6 +21,14 @@ class UserView(APIView):
         user_serializer = UserSerializer(user, many=True)
         return JsonResponse(user_serializer.data, safe=False)
 
+class OneUserView(APIView):
+    def get(self, request, email):
+        try:
+            user = User.objects.get(email=email)
+            user_serializer = UserSerializer(user)
+            return JsonResponse(user_serializer.data)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'User not found'}, status=404)
 
 class UserDeleteView(APIView):
     def delete(self, request, id):
@@ -66,6 +74,25 @@ class RecipeView(APIView):
         recipe_serializer = RecipeSerializer(recipe, many=True)
         return JsonResponse(recipe_serializer.data, safe=False)
 
+class OneRecipeView(APIView):
+    def get(self, request, id):
+        try:
+            recipe = Recipe.objects.get(id=id)
+            recipe_serializer = RecipeSerializer(recipe)
+            return JsonResponse(recipe_serializer.data)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Recipe not found'}, status=404)
+
+
+class RecipeViewUsingFk(APIView):
+    def get(self, request, fk_id):
+        try:
+            recipes = Recipe.objects.filter(fk_id=fk_id)
+            recipe_serializer = RecipeSerializer(recipes, many=True)
+            return JsonResponse(recipe_serializer.data, safe=False)
+        except Recipe.DoesNotExist:
+            return JsonResponse({'error': 'Recipe not found'}, status=404)
+
 
 class RecipeDeleteView(APIView):
     def delete(self, request, id):
@@ -76,9 +103,10 @@ class RecipeDeleteView(APIView):
 
 class RecipeAddView(APIView):
     def post(self, request):
-        # recipe = Recipe.objects.all()
         recipe_serializer = RecipeSerializer(data=request.data)
+
         if recipe_serializer.is_valid():
             recipe_serializer.save()
-            return JsonResponse("Recipe added successfully")
-        return JsonResponse("Fail to add user", safe=False)
+            return Response("Recipe added successfully", status=status.HTTP_201_CREATED)
+        else:
+            return Response(recipe_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
