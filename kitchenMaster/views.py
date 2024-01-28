@@ -81,8 +81,7 @@ class SignupView(APIView):
 
     def post(self, request, format=None):
         data = request.data
-        
-
+    
         if data['password'] == data['password2']:
             if User.objects.filter(email=data['email']).exists():
                 return Response({'error': 'Email already exists'})
@@ -93,8 +92,10 @@ class SignupView(APIView):
                     data['password'] = make_password(data['password'])
                     user_serializer = UserSerializer(data=data)
                     if  user_serializer.is_valid():
-                        user_serializer.save()
-                        return Response({'success': 'User created successfully'},status=200)
+                        user = user_serializer.save()
+                        token, created = Token.objects.get_or_create(user=user) 
+                        return Response({'token' : token.key,
+                             'message': 'Successfully logged in'}, status=status.HTTP_200_OK)
 
                     else:
                         return Response({'error': user_serializer.errors})
@@ -107,24 +108,38 @@ class SignupView(APIView):
 
 
 class SigninView(APIView):
-    permission_classes = (permissions.AllowAny, )
+    # permission_classes = (permissions.AllowAny)
 
     def post(self, request, *args, **kwargs):
-        data = request.data
-        email = data['email']
-        password = data['password']
-
-        user = authenticate(request, email=email, password=password)
-
-        if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
-            if not created:
-                 token.delete()
-                 token = Token.objects.create(user=user)
-
-            return Response({'token' : token.key,
-                             'message': 'Successfully logged in'}, status=status.HTTP_200_OK)
+       
+        provided_token = request.META.get('HTTP_AUTHORIZATION')
+        if provided_token and provided_token.startswith('Bearer '):
+                token_key = provided_token.split(' ')[1]
+                try:
+                    token = Token.objects.get(key=token_key)
+                    user = token.user
+                    return Response({'message':'User logged in'},status=200)
+                
+                except Token.DoesNotExist:
+                    return JsonResponse({
+                        "message": "Invalid token"
+                    }, status=status.HTTP_401_UNAUTHORIZED)
+                
         else:
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            data = request.data
+            email = data['email']
+            password = data['password']
+            user = authenticate(request, email=email, password=password)
+
+            if user is not None:
+                token, created = Token.objects.get_or_create(user=user)
+                if not created:
+                    token.delete()
+                    token = Token.objects.create(user=user)
+
+                return Response({'token' : token.key,
+                                'message': 'Successfully logged in'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         
  
