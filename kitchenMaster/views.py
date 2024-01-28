@@ -11,6 +11,14 @@ from .models import Recipe
 from django.views.decorators.csrf import csrf_exempt
 from django.http.response import JsonResponse
 
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import permissions
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate
+from rest_framework import status
+from rest_framework.authtoken.views import Token
+
 
 # Create your views here.
 class UserView(viewsets.ModelViewSet):
@@ -66,3 +74,72 @@ def recipeApi(request, id=0):
             recipe_serializer.save()
             return JsonResponse("Recipe updated successfully")
         return JsonResponse("Fail to update recipe", safe=False)
+
+
+class SignupView(APIView):
+    permission_classes = (permissions.AllowAny, )
+
+    def post(self, request, format=None):
+        data = request.data
+    
+        if data['password'] == data['password2']:
+            if User.objects.filter(email=data['email']).exists():
+                return Response({'error': 'Email already exists'})
+            else:
+                if len(data['password']) < 6:
+                    return Response({'error': 'Password must be at least 6 characters'})
+                else:
+                    data['password'] = make_password(data['password'])
+                    user_serializer = UserSerializer(data=data)
+                    if  user_serializer.is_valid():
+                        user = user_serializer.save()
+                        token, created = Token.objects.get_or_create(user=user) 
+                        return Response({'token' : token.key,
+                             'message': 'Successfully logged in'}, status=status.HTTP_200_OK)
+
+                    else:
+                        return Response({'error': user_serializer.errors})
+                   
+                    
+        else:
+            return Response({'error': 'Passwords do not match'})
+
+
+
+
+class SigninView(APIView):
+    # permission_classes = (permissions.AllowAny)
+
+    def post(self, request, *args, **kwargs):
+       
+        provided_token = request.META.get('HTTP_AUTHORIZATION')
+        if provided_token and provided_token.startswith('Bearer '):
+                token_key = provided_token.split(' ')[1]
+                try:
+                    token = Token.objects.get(key=token_key)
+                    user = token.user
+                    return Response({'message':'User logged in'},status=200)
+                
+                except Token.DoesNotExist:
+                    return JsonResponse({
+                        "message": "Invalid token"
+                    }, status=status.HTTP_401_UNAUTHORIZED)
+                
+        else:
+            data = request.data
+            email = data['email']
+            password = data['password']
+            user = authenticate(request, email=email, password=password)
+
+            if user is not None:
+                token, created = Token.objects.get_or_create(user=user)
+                if not created:
+                    token.delete()
+                    token = Token.objects.create(user=user)
+
+                return Response({'token' : token.key,
+                                'message': 'Successfully logged in'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+ 

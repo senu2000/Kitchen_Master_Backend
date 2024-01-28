@@ -1,11 +1,26 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 # from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
 from datetime import date
 
 
 # Create your models here.
+
+class UserAccountManager(BaseUserManager):
+    def create_user(self, email, name, password=None):
+        if not email:
+            raise ValueError('Users must have an email address')
+        
+        email = self.normalize_email(email)
+        user = self.model(email=email, name=name)
+
+        user.set_password(password)
+        user.save()
+
+        return user
+    
+
 class User(AbstractUser):
     firstname = models.CharField(max_length=255)
     lastname = models.CharField(max_length=255)
