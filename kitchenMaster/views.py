@@ -41,7 +41,7 @@ class UserAddView(APIView):
         user_serializer = UserSerializer(data=request.data)
         if user_serializer.is_valid():
             user_serializer.save()
-            return JsonResponse("User added successfully")
+            return JsonResponse("User added successfully", safe=False)
         return JsonResponse("Fail to add user", safe=False)
 
 class FindUser(APIView):
