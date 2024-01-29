@@ -108,3 +108,12 @@ class RecipeAddView(APIView):
             return Response("Recipe added successfully", status=status.HTTP_201_CREATED)
         else:
             return Response(recipe_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class SearchRecipe(APIView):
+    def get(self, request, title):
+        try:
+            recipes = Recipe.objects.filter(title=title)
+            recipe_serializer = RecipeSerializer(recipes, many=True)
+            return JsonResponse(recipe_serializer.data, safe=False)
+        except Recipe.DoesNotExist:
+            return JsonResponse({'error': 'Recipe not found'}, status=404)
